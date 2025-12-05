@@ -11,13 +11,13 @@
 Via Package Manager:
 
 ```
-https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework
+https://github.com/mohamedmoghazy/UiFramework.git
 ```
 
 Via manifest.json:
 
 ```json
-"com.DawaniyahGames.UiFramework": "https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework"
+"com.DawaniyahGames.UiFramework": "https://github.com/mohamedmoghazy/UiFramework.git"
 ```
 
 ## Architecture Overview

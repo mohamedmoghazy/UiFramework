@@ -52,7 +52,7 @@ jobs:
       - name: Update package.json version
         run: |
           VERSION="${{ steps.bump.outputs.new_version }}"
-          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" Assets/UiFramework/package.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
           echo "Updated package.json to version $VERSION"
 
       - name: Update CHANGELOG.md
@@ -94,14 +94,14 @@ jobs:
 
           #### Via Package Manager UI
           \`\`\`
-          https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework#v${VERSION}
+          https://github.com/mohamedmoghazy/UiFramework.git#v${VERSION}
           \`\`\`
 
           #### Via manifest.json
           \`\`\`json
           {
             "dependencies": {
-              "com.mohamedmoghazy.uiframework": "https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework#v${VERSION}"
+              "com.DawaniyahGames.UiFramework": "https://github.com/mohamedmoghazy/UiFramework.git#v${VERSION}"
             }
           }
           \`\`\`
@@ -132,7 +132,7 @@ jobs:
                 "text": "📦 *Package:* com.mohamedmoghazy.uiframework\n🔗 <https://github.com/${{ github.repository }}/releases/tag/v${{ steps.bump.outputs.new_version }}|View Release on GitHub>"
               }},
               { "type": "section", "text": { "type": "mrkdwn",
-                "text": "```\nhttps://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework#v${{ steps.bump.outputs.new_version }}\n```"
+                "text": "```\nhttps://github.com/mohamedmoghazy/UiFramework.git#v${{ steps.bump.outputs.new_version }}\n```"
               }},
               { "type": "context", "elements": [
                 { "type": "mrkdwn", "text": "🚀 Ship it! • 🧰 Auto notes generated • 📝 VERSION & package.json bumped" }
