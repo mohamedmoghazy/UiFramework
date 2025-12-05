@@ -1,23 +1,15 @@
-name: Bump version after dev→main merge
+name: Bump version on dev push
 
 on:
-  pull_request:
-    types: [closed]
+  push:
     branches:
-      - main
+      - dev
 
 permissions:
-  contents: write # required to create tags and releases
-  pull-requests: write # required to open PRs with version bumps
+  contents: write
 
 jobs:
-  release:
-    if: >
-      ${{
-        github.event.pull_request.merged == true &&
-        github.event.pull_request.base.ref == 'main' &&
-        github.event.pull_request.head.ref == 'dev'
-      }}
+  bump:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -110,38 +102,13 @@ jobs:
           \`\`\`
           EOF
 
-      - name: Open release PR with version bump
-        id: cpr
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
-          branch: release/v${{ steps.bump.outputs.new_version }}
-          title: "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
-          body: |
-            ## Summary
-            - Bump version to v${{ steps.bump.outputs.new_version }}
-            - Update CHANGELOG and package.json
+      - name: Commit version updates to dev
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add package.json CHANGELOG.md release-notes.md
+          git commit -m "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
+          git push origin HEAD:dev
 
-            This PR was generated automatically after merging `dev` into `main`.
-          base: main
-          labels: release
-
-      - name: Open backport PR to dev (keep branches aligned)
-        id: cpr_dev
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
-          branch: release/v${{ steps.bump.outputs.new_version }}
-          title: "chore: Sync version v${{ steps.bump.outputs.new_version }} to dev"
-          body: |
-            ## Summary
-            - Backport version bump v${{ steps.bump.outputs.new_version }} to dev so branches stay aligned.
-
-            This PR was generated automatically after merging `dev` into `main`.
-          base: dev
-          labels: release
-
-      # Note: We only open PRs here to comply with branch protection.
-      # Tagging and release is handled by a separate workflow on tag creation.
+      # Open PR to main manually: dev → main. Tagging and release
+      # are handled by the separate tag-triggered workflow.
