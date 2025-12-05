@@ -88,7 +88,7 @@ jobs:
 
           ### Version Information
           - **Version**: v${VERSION}
-          - **Package**: com.mohamedmoghazy.uiframework
+          - **Package**: com.dawaniyahgames.uiframework
 
           ### Installation
 
@@ -101,7 +101,7 @@ jobs:
           \`\`\`json
           {
             "dependencies": {
-              "com.DawaniyahGames.UiFramework": "https://github.com/mohamedmoghazy/UiFramework.git#v${VERSION}"
+              "com.dawaniyahgames.uiframework": "https://github.com/mohamedmoghazy/UiFramework.git#v${VERSION}"
             }
           }
           \`\`\`
@@ -129,7 +129,7 @@ jobs:
                 "text": "*Repo:* ${{ github.repository }}\n*Version:* v${{ steps.bump.outputs.new_version }}\n*Merged by:* ${{ github.event.pull_request.merged_by.login }}\n*From → To:* dev → main"
               }},
               { "type": "section", "text": { "type": "mrkdwn",
-                "text": "📦 *Package:* com.mohamedmoghazy.uiframework\n🔗 <https://github.com/${{ github.repository }}/releases/tag/v${{ steps.bump.outputs.new_version }}|View Release on GitHub>"
+                "text": "📦 *Package:* com.dawaniyahgames.uiframework\n🔗 <https://github.com/${{ github.repository }}/releases/tag/v${{ steps.bump.outputs.new_version }}|View Release on GitHub>"
               }},
               { "type": "section", "text": { "type": "mrkdwn",
                 "text": "```\nhttps://github.com/mohamedmoghazy/UiFramework.git#v${{ steps.bump.outputs.new_version }}\n```"
