@@ -179,7 +179,7 @@ namespace UiFramework.Editor.Window
 
         public void LoadOrCreateConfig()
         {
-            const string path = "Assets/Scripts/UiFramework/Editor/UiEditorConfig.asset";
+            const string path = "Assets/UiConfigs/UiEditorConfig.asset";
             UiEditorConfig config = AssetDatabase.LoadAssetAtPath<UiEditorConfig>(path);
 
             if (config == null)
