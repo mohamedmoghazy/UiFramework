@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write # required to create tags and releases
+  pull-requests: write # required to open PRs with version bumps
 
 jobs:
   release:
@@ -52,7 +53,9 @@ jobs:
       - name: Update package.json version
         run: |
           VERSION="${{ steps.bump.outputs.new_version }}"
-          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
+          tmp_file=$(mktemp)
+          jq --arg v "$VERSION" '.version = $v' package.json > "$tmp_file"
+          mv "$tmp_file" package.json
           echo "Updated package.json to version $VERSION"
 
       - name: Update CHANGELOG.md
@@ -107,6 +110,47 @@ jobs:
           \`\`\`
           EOF
 
+      - name: Open release PR with version bump
+        id: cpr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
+          branch: release/v${{ steps.bump.outputs.new_version }}
+          title: "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
+          body: |
+            ## Summary
+            - Bump version to v${{ steps.bump.outputs.new_version }}
+            - Update CHANGELOG and package.json
+
+            This PR was generated automatically after merging `dev` into `main`.
+          base: main
+          labels: release
+
+      - name: Open backport PR to dev (keep branches aligned)
+        id: cpr_dev
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
+          branch: release/v${{ steps.bump.outputs.new_version }}
+          title: "chore: Sync version v${{ steps.bump.outputs.new_version }} to dev"
+          body: |
+            ## Summary
+            - Backport version bump v${{ steps.bump.outputs.new_version }} to dev so branches stay aligned.
+
+            This PR was generated automatically after merging `dev` into `main`.
+          base: dev
+          labels: release
+
+      - name: Tag release branch
+        run: |
+          VERSION="${{ steps.bump.outputs.new_version }}"
+          BRANCH="release/v${{ steps.bump.outputs.new_version }}"
+          git fetch origin "$BRANCH"
+          git tag "v$VERSION" "origin/$BRANCH"
+          git push origin "v$VERSION"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -115,48 +159,3 @@ jobs:
           generate_release_notes: true
           body_path: release-notes.md
           make_latest: true
-
-      - name: Commit version updates
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add package.json CHANGELOG.md
-          git commit -m "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
-
-      - name: Push version updates to dev
-        run: |
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
-
-      - name: Compose Slack release message
-        if: env.SLACK_WEBHOOK != ''
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACKGITHUBANNOUNCEMENTS }}
-        run: |
-          cat > payload.json <<'JSON'
-          {
-            "blocks": [
-              { "type": "header", "text": { "type": "plain_text", "text": "🎉 New UI Framework Release" } },
-              { "type": "section", "text": { "type": "mrkdwn",
-                "text": "*Repo:* ${{ github.repository }}\n*Version:* v${{ steps.bump.outputs.new_version }}\n*Merged by:* ${{ github.event.pull_request.merged_by.login }}\n*From → To:* dev → main"
-              }},
-              { "type": "section", "text": { "type": "mrkdwn",
-                "text": "📦 *Package:* com.dawaniyahgames.uiframework\n🔗 <https://github.com/${{ github.repository }}/releases/tag/v${{ steps.bump.outputs.new_version }}|View Release on GitHub>"
-              }},
-              { "type": "section", "text": { "type": "mrkdwn",
-                "text": "```\nhttps://github.com/mohamedmoghazy/UiFramework.git#v${{ steps.bump.outputs.new_version }}\n```"
-              }},
-              { "type": "context", "elements": [
-                { "type": "mrkdwn", "text": "🚀 Ship it! • 🧰 Auto notes generated • 📝 VERSION & package.json bumped" }
-              ]}
-            ]
-          }
-          JSON
-
-      - name: Send Slack release message
-        if: env.SLACK_WEBHOOK != ''
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACKGITHUBANNOUNCEMENTS }}
-        run: |
-          curl -X POST -H 'Content-type: application/json' \
-               --data @payload.json \
-               ${{ secrets.SLACKGITHUBANNOUNCEMENTS }}
