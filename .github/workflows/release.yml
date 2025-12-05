@@ -114,7 +114,7 @@ jobs:
         id: cpr
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.REPO_PAT }}
           commit-message: "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
           branch: release/v${{ steps.bump.outputs.new_version }}
           title: "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
@@ -131,7 +131,7 @@ jobs:
         id: cpr_dev
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.REPO_PAT }}
           commit-message: "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
           branch: release/v${{ steps.bump.outputs.new_version }}
           title: "chore: Sync version v${{ steps.bump.outputs.new_version }} to dev"
