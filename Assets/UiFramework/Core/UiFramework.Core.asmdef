@@ -1,0 +1,16 @@
+{
+    "name": "UiFramework.Core",
+    "rootNamespace": "UiFramework.Core",
+    "references": [
+        "Unity.Addressables"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

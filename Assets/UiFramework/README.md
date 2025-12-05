@@ -1,224 +1,141 @@
-# UI Framework — High-Level System Design (DenDon)
+# UI Framework
 
-## Architecture Overview
+[![Unity Version](https://img.shields.io/badge/Unity-2021.3%2B-blue.svg)](https://unity.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
 
-The UI framework composes application UI from Addressable scenes and exposes a small runtime API to push/pop logical UI states. It follows the project's MVC-S approach: the framework is the View layer's composition system and integrates with the app via `UiState` contexts and `IUiElement.Populate` calls.
+A flexible Unity UI Framework using **Addressables-based scene composition** with LIFO state stack management. Build UI screens as additive scenes and populate them with runtime data through a simple contract-based system.
 
-## Core Components
+## Features
 
-1. UiManager (Assets/Scripts/UiFramework/Runtime/Manager/UiManager.cs)
-   - Orchestrates a LIFO stack of `UiState` objects.
-   - Public API: `ShowState<T>`, `ShowStateByKey`, `HideUI`, `GetCurrentState`.
-   - Loads `UiConfig` (ScriptableObject) at Init and builds a type→stateKey map.
-2. UiState (Assets/Scripts/UiFramework/Core/UiCompoenets/UiState.cs)
-   - Loads addressable scenes additively via `Addressables.LoadSceneAsync`.
-   - Discovers `IUiElement` components in loaded scenes and calls `Populate(context)`.
-   - Handles unloading and cleanup (`UnloadUiState`, `Dispose`).
-3. UiElement / IUiElement (Assets/Scripts/UiFramework/Core/UiCompoenets)
-   - `IUiElement.Populate(object context)` is the contract for receiving runtime data.
-   - Recommended: implement `UiElement : MonoBehaviour` and override `Populate`.
-4. UiConfig (Assets/Scripts/UiFramework/Core/Config/UiConfig.cs)
-   - ScriptableObject mapping `stateKey` → list of `AssetReference` scene entries.
-5. Editor helpers (UiStateRegistry, UiStateGenerator)
-   - Editor tooling can generate `UiState` shells or register scenes; see `Assets/Scripts/UiFramework/Editor`.
+- 🎯 **Addressables Integration** - Load UI screens as additive scenes for efficient memory management
+- 📚 **LIFO State Stack** - Push/pop UI states with automatic scene lifecycle management
+- 🔄 **Context-Based Population** - Pass runtime data to UI elements via `IUiElement.Populate()`
+- 🛠️ **Editor Tools** - Code generation and visual setup manager for rapid development
+- 🎨 **Template System** - Generate UI elements and states from customizable templates
+- ⚡ **Type-Safe API** - Generic `ShowState<T>()` with reflection-based type resolution
 
-## Data Flow Example — Showing a Screen
+## Installation
 
-- Call `UiManager.ShowState<MyState>(context)` or `UiManager.ShowStateByKey("MyState", context)`.
-- UiManager looks up the `UiStateEntry` from `UiConfig` and constructs a `UiState` with the configured `AssetReference` scenes.
-- `UiState.Init(context)` begins Addressables loads for each scene; on load complete it finds `IUiElement`s and calls `Populate(context)`.
-- If `additive` is false, previous states are unloaded via `UnloadUiState` and the new `UiState` is pushed onto the stack.
+### Via Package Manager (Git URL)
 
-## Important Patterns & Conventions
+1. Open Unity Package Manager (`Window → Package Manager`)
+2. Click the `+` button and select `Add package from git URL...`
+3. Enter: `https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework`
+4. Click `Add`
 
-- `stateKey` naming: the framework expects `stateKey` values to align with `UiState` subclass names when using the generic API. `GetTypeForKey` resolves types by class name across assemblies.
-- Addressables-first: UI is built from addressable scenes so that screens can be loaded/unloaded independently at runtime.
-- LIFO state stack: `UiManager` maintains stacked states (push/pop) to support nested screens and modals.
-- Context object: the `context` parameter is the primary mechanism for passing runtime data to UI elements — cast it to expected types in `Populate`.
+### Via manifest.json
 
-## Integration Points & Dependencies
+Add this to your `Packages/manifest.json`:
 
-- Relies on Unity Addressables package: scenes are `AssetReference` items. Ensure addressables groups are set up.
-- Designed to be called from the project's loading steps or services (e.g., after `Bootstrapper` completes). Typical integration point: call `await uiManager.Init()` during app startup.
+```json
+{
+  "dependencies": {
+    "com.mohamedmoghazy.uiframework": "https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework"
+  }
+}
+```
 
-## Developer Workflows (practical notes)
+## Quick Start
 
-- Adding screens: create addressable scenes containing `UiElement` components, add `AssetReference` to `UiConfig` under a `stateKey`.
-- Debugging: enable logs in `UiManager` and `UiState` to trace load/unload flow; inspect `UiConfig` entries in the inspector.
-- Testing in editor: use `UiManager.ShowStateByKey` from a temporary debug MonoBehaviour or the console to validate scene loading and `Populate` invocations.
+### 1. Setup UI Manager
 
-## Files To Inspect
+```csharp
+using UiFramework.Runtime.Manager;
+using UnityEngine;
 
-- `Assets/Scripts/UiFramework/Runtime/Manager/UiManager.cs` — state orchestration
-- `Assets/Scripts/UiFramework/Core/UiCompoenets/UiState.cs` — scene load/unload and element discovery
-- `Assets/Scripts/UiFramework/Core/UiCompoenets/UiElement.cs` & `IUiElement.cs` — element contract
-- `Assets/Scripts/UiFramework/Core/Config/UiConfig.cs` — mapping stateKey→scenes
-- `Assets/Scripts/UiFramework/Editor/*` — generator and registry tools
+public class GameBootstrap : MonoBehaviour
+{
+    [SerializeField] private UiManager uiManager;
 
-## Do's & Don'ts
+    private async void Start()
+    {
+        await uiManager.Init();
+        await UiManager.ShowStateByKey("MainMenu");
+    }
+}
+```
 
-- Do: keep `stateKey` values consistent and descriptive. Prefer creating a `UiState` subclass named exactly like the `stateKey` if you use the generic API.
-- Do: place each isolated UI screen in its own addressable scene to enable efficient unloading.
-- Don't: rely on scene names alone — use `AssetReference`s stored in `UiConfig` so Addressables resolves properly.
-- Don't: have multiple `UiManager` instances active; `SetInstance` is called during `Init` and the framework assumes a single runtime manager.
-
-If you want, I can:
-
-- Add a small Editor validation window that enumerates `UiConfig` entries and verifies each `AssetReference` resolves and contains `IUiElement` components.
-- Add optional defensive logging and safer type-mapping (explicit type registration) to reduce runtime fragility.
-
----
-
-Place this file next to the framework sources so engineers and AI agents can quickly understand and extend the UI framework.
-
-## ASCII UML (high-level)
-
-Below is a compact ASCII UML-style diagram showing the runtime relationships and typical flow between components.
-
-UiManager
-|
-|-- stack of UiState (LIFO)
-|
-+-- UiState
-| - StateName
-| - uiElementScenes : List<AssetReference>
-| - loadedScenes : Dictionary<string, SceneInstance>
-| - activeUiElements : List<IUiElement>
-| - Init(context) -> Addressables.LoadSceneAsync(...)
-| - OnSceneLoadCompleted -> Populate(context) on IUiElement
-| - UnloadUiState(keepScenes)
-|
-+-- UiElement (IUiElement) - Populate(object context) - MonoBehaviour (view logic)
-
-UiConfig (ScriptableObject)
-
-- entries: List<UiStateEntry>
-  - UiStateEntry { stateKey: string, uiElementScenes: List<AssetReference> }
-
-Notes:
-
-- `UiManager` maps `Type` <-> `stateKey` via `GetTypeForKey(stateKey)` (type name matching).
-- `UiState` loads scenes additively; each scene contains root GameObjects implementing `IUiElement`.
-
-## Onboarding Quick Reference (for new developers)
-
-- Where to start:
-
-  - Read `Assets/Scripts/UiFramework/README.md` (this file).
-  - Open `Assets/Scripts/UiFramework/Core/Config/UiConfig.cs` in the Editor and inspect `UiConfig` ScriptableObject assigned to your `UiManager` GameObject.
-  - Inspect example states (search `UiState` subclasses in `Assets/Scripts/Ui` or project UI folders).
-
-- Fast checklist to show a UI state in code:
-  - Ensure `UiManager` has been initialized (call `await uiManager.Init()` during bootstrap).
-  - Call `await UiManager.ShowStateByKey("MyStateKey", context)` or `await UiManager.ShowState<MyState>(context)`.
-
-## Editor Tool: TA Tutorial — Creating a new UiState and UiElements
-
-This step-by-step guide is written for Technical Artists (TA) or non-programmers who need to create new screens using the Editor tools and minimal C#.
-
-Prerequisites:
-
-- Unity Editor with Addressables package configured.
-- `UiConfig` ScriptableObject instance created and assigned to `UiManager` in a scene (project bootstrap scene).
-
-Step 1 — Prepare the scene
-
-1. Create a new Scene in Unity for your screen (e.g., `UI_PlayerProfile.unity`).
-2. Design UI visually using UI Toolkit or Unity UI; add root GameObjects for each logical element.
-3. For each root element that needs runtime data, add a MonoBehaviour that inherits `UiElement` (see example below) or add an existing `UiElement` script.
-4. Mark the Scene as Addressable: open Addressables Groups window, drag the scene into a group and create an `AssetReference`.
-
-Step 2 — Create a UiElement script (small C#; TA can copy/paste)
-
-1. Create a script under `Assets/Scripts/Ui/UIDisplayes/` (or similar) named `PlayerProfileUiElement.cs`.
-2. Example (follow `.editorconfig` rules):
+### 2. Create UI Element
 
 ```csharp
 using UiFramework.Core;
-using TMPro;
+using UnityEngine;
 
-public class PlayerProfileUiElement : UiElement
+public class MainMenuElement : UiElement
 {
-      [SerializeField] private TextMeshProUGUI nameLabel;
-
-      public override void Populate(object context = null)
-      {
-            if (context is PlayerProfileContext p)
-            {
-                  nameLabel.text = p.DisplayName ?? "Player";
-            }
-            else
-            {
-                  nameLabel.text = "Player";
-            }
-      }
-}
-
-public class PlayerProfileContext
-{
-      public string DisplayName { get; set; }
+    public override void Populate(object context = null)
+    {
+        if (context is MenuData data)
+        {
+            // Use data to configure UI
+        }
+    }
 }
 ```
 
-Step 3 — Add the scene to `UiConfig`
+### 3. Configure in Editor
 
-1. Open your `UiConfig` ScriptableObject in the inspector (Assets → find `UiConfig`).
-2. Add a new entry with:
-   - `stateKey`: choose `PlayerProfileState` (we recommend the `State` suffix to match class names),
-   - `uiElementScenes`: add the `AssetReference` to `UI_PlayerProfile` scene.
+1. Open `Window → UiFramework/UI Setup Manager`
+2. Use **Elements** tab to generate UI element scripts
+3. Create addressable scene with your UI elements
+4. Use **States** tab to register scenes under a state key
+5. Call `UiManager.ShowStateByKey("YourStateKey", context)` at runtime
 
-Step 4 — (Optional) Create a `UiState` subclass
+## Core Architecture
 
-1. If you need custom code when entering the state, create a subclass:
-
-```csharp
-using UiFramework.Core;
-
-public class PlayerProfileState : UiState
-{
-      public PlayerProfileState(List<UnityEngine.AddressableAssets.AssetReference> scenes)
-            : base("PlayerProfileState", scenes)
-      {
-      }
-}
+```
+UiManager (Singleton)
+├── LIFO State Stack
+│   └── UiState (Scene Loader)
+│       ├── Addressables.LoadSceneAsync()
+│       └── IUiElement.Populate(context)
+│
+├── UiConfig (ScriptableObject)
+│   └── stateKey → List<AssetReference>
+│
+└── Type Resolution
+    └── Reflection: Class Name → stateKey
 ```
 
-2. Note: the framework can work without a custom subclass — `UiState` default behavior is usually sufficient.
+## Key Components
 
-Step 5 — Show the state at runtime (test)
+| Component    | Path                              | Purpose                                    |
+| ------------ | --------------------------------- | ------------------------------------------ |
+| `UiManager`  | `Runtime/Manager/UiManager.cs`    | Orchestrates state stack and scene loading |
+| `UiState`    | `Core/UiCompoenets/UiState.cs`    | Loads scenes and discovers UI elements     |
+| `UiConfig`   | `Core/Config/UiConfig.cs`         | Maps state keys to scene references        |
+| `IUiElement` | `Core/UiCompoenets/IUiElement.cs` | Contract for UI data population            |
 
-1. Create a small debug MonoBehaviour (Editor-only if you prefer) with a button that calls:
+## Documentation
 
-```csharp
-await UiManager.ShowStateByKey("PlayerProfileState", new PlayerProfileContext { DisplayName = "Alex" });
-```
+- [Design Documentation](DESIGN.md) - Detailed architecture and system design
+- [Copilot Instructions](../../.github/copilot-instructions.md) - Guide for AI coding assistants
 
-2. Enter Play Mode and click the button — the Addressable scene should load and the UI elements' `Populate` methods should be executed.
+## Requirements
 
-Step 6 — Validate and iterate
+- Unity 2021.3 or later
+- Addressables package (1.21.0+)
 
-- If UI does not appear, check these:
-  - `UiConfig` entry `stateKey` matches your chosen class name (or use `ShowStateByKey`).
-  - The scene is addressable and `AssetReference` is correct.
-  - Console logs for Addressables load errors (missing groups, build not updated).
+## Code Standards
 
-Editor Tools (where to look)
+This project enforces strict C# coding standards via `.editorconfig`:
 
-- `Assets/Scripts/UiFramework/Editor/UiStateRegistry.cs` — registry of states used by generator.
-- `Assets/Scripts/UiFramework/Editor/CodeGeneration/UiStateGenerator.cs` — helper to create `UiState` class shells; use this if you want boilerplate classes generated.
+- ✅ No `var` keyword - always explicit types
+- ✅ No target-typed `new()` - always specify type
+- ✅ Braces required for all control blocks
+- ✅ No expression-bodied members
+- ✅ `camelCase` for private fields (no underscore prefix)
+- ✅ Using directives outside namespace
 
-TA tips
+## License
 
-- Keep UI scenes small and focused so individual screens load quickly.
-- Prefer one logical `UiElement` script per functional block (header, list, footer) to maximize reuse.
-- Use `context` as a plain DTO (POCO) with only the data the UI needs; avoid passing large service objects.
+MIT License - see [LICENSE.md](LICENSE.md) file for details
 
-## Suggested Editor Validation (manual)
+## Contributing
 
-1. In Editor, open `UiConfig` and iterate entries:
-   - For each `AssetReference` click `Select` to open the referenced scene and visually confirm `IUiElement` components are present on root GameObjects.
-2. Run a quick Play Mode smoke test that calls `UiManager.ShowStateByKey` for each entry and confirms scenes load without Addressable errors.
+Contributions are welcome! Please ensure code follows the `.editorconfig` standards.
 
----
+## Support
 
-If you want, I can implement an Editor Window that automates the validation steps (non-destructive) and optionally scaffolds `UiState` classes using the generator. Mark this in the todo list if you'd like me to proceed.
+- 📝 [Issues](https://github.com/mohamedmoghazy/UiFramework/issues)
+- 💬 [Discussions](https://github.com/mohamedmoghazy/UiFramework/discussions)
