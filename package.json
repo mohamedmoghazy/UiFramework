@@ -1,6 +1,6 @@
 {
   "name": "com.dawaniyahgames.uiframework",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "displayName": "UI Framework",
   "description": "Unity UI Framework with Addressables-based scene composition and LIFO state stack management. Provides a flexible system for loading UI screens as additive scenes with runtime data population.",
   "unity": "2021.3",
@@ -15,14 +15,14 @@
   ],
   "author": {
     "name": "Dawaniyah Games",
-    "url": "https://github.com/mohamedmoghazy"
+    "url": "https://github.com/dawaniyah-games"
   },
   "dependencies": {
     "com.unity.addressables": "1.21.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mohamedmoghazy/UiFramework.git"
+    "url": "https://github.com/dawaniyah-games/UiFramework.git"
   },
   "license": "MIT",
   "samples": [

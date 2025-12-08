@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.21] - 2025-12-08
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
 ## [1.0.20] - 2025-12-05
 
 ### Changed
@@ -164,4 +170,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unity 2021.3 or later
 - Unity Addressables 1.21.0+
 
-[1.0.0]: https://github.com/mohamedmoghazy/UiFramework/releases/tag/v1.0.0
+[1.0.0]: https://github.com/dawaniyah-games/UiFramework/releases/tag/v1.0.0
