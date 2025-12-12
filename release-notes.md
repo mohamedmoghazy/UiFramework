@@ -3,21 +3,21 @@
 Merged `dev` → `main`
 
 ### Version Information
-- **Version**: v1.0.34
+- **Version**: v1.0.35
 - **Package**: com.dawaniyahgames.uiframework
 
 ### Installation
 
 #### Via Package Manager UI
 ```
-  https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.0.34
+  https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.0.35
 ```
 
 #### Via manifest.json
 ```json
 {
   "dependencies": {
-      "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.0.34"
+      "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.0.35"
   }
 }
 ```
