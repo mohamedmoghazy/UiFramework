@@ -39,7 +39,7 @@ namespace UiFramework.Runtime.Manager
             cachedStates.Clear();
             typeToKeyMap.Clear();
 
-            foreach (var entry in config.entries)
+            foreach (UiStateEntry entry in config.entries)
             {
                 cachedStates[entry.stateKey] = entry;
                 typeToKeyMap[GetTypeForKey(entry.stateKey)] = entry.stateKey;
@@ -60,19 +60,19 @@ namespace UiFramework.Runtime.Manager
                 return instance;
             }
 
-            GameObject go = new GameObject("UiManager");
-            UiManager created = go.AddComponent<UiManager>();
+            GameObject gameObjectUiManager = new GameObject("UiManager");
+            UiManager created = gameObjectUiManager.AddComponent<UiManager>();
             created.config = uiConfig;
-            UnityEngine.Object.DontDestroyOnLoad(go);
+            DontDestroyOnLoad(gameObjectUiManager);
             SetInstance(created);
             return created;
         }
 
         public static async Task<UiManager> InitializeAsync(UiConfig uiConfig, UiState defaultState = null)
         {
-            UiManager mgr = Initialize(uiConfig);
-            await mgr.Init(defaultState);
-            return mgr;
+            UiManager uiManager = Initialize(uiConfig);
+            await uiManager.Init(defaultState);
+            return uiManager;
         }
 
         public static async Task ShowState<T>(object context = null, bool additive = false) where T : UiState
