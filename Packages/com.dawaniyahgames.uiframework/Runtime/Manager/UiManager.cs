@@ -10,7 +10,14 @@ namespace UiFramework.Runtime.Manager
     public class UiManager : MonoBehaviour
     {
         private static UiManager instance;
-        public static void SetInstance(UiManager instance)
+        public static bool IsInitialized
+        {
+            get
+            {
+                return instance != null;
+            }
+        }
+        private static void SetInstance(UiManager instance)
         {
             UiManager.instance = instance;
         }
@@ -44,6 +51,28 @@ namespace UiFramework.Runtime.Manager
             {
                 // await ShowState(defaultState.GetType());
             }
+        }
+
+        public static UiManager Initialize(UiConfig uiConfig)
+        {
+            if (instance != null)
+            {
+                return instance;
+            }
+
+            GameObject go = new GameObject("UiManager");
+            UiManager created = go.AddComponent<UiManager>();
+            created.config = uiConfig;
+            UnityEngine.Object.DontDestroyOnLoad(go);
+            SetInstance(created);
+            return created;
+        }
+
+        public static async Task<UiManager> InitializeAsync(UiConfig uiConfig, UiState defaultState = null)
+        {
+            UiManager mgr = Initialize(uiConfig);
+            await mgr.Init(defaultState);
+            return mgr;
         }
 
         public static async Task ShowState<T>(object context = null, bool additive = false) where T : UiState
